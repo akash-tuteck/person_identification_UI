@@ -10,7 +10,7 @@ export default function Dashboard() {
   const objects = images.reduce((sum, image) => sum + (image.automatic?.detection?.total_objects || image.objects?.total_objects || 0), 0);
   return <>
     <section className="card hero"><div><h2>Person Re-Identification</h2><p>Upload images and videos, detect people and objects, extract features and compare matches.</p></div>
-      <button className="btn lg" onClick={() => nav('/analysis')}>Process an image</button>
+      <button className="btn lg" onClick={() => { setCurrent(null); nav('/analysis'); }}>Process an image</button>
     </section>
     <div className="grid stats">
       <StatCard icon={Images} label="Images processed this session" value={images.length} tone="p"/>
