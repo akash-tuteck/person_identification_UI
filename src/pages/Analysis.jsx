@@ -85,7 +85,7 @@ export default function Analysis() {
         <span><b>{file.name}</b> <small>({(file.size / 1024 / 1024).toFixed(2)} MB)</small></span>
         <button className="btn sm ghost" onClick={() => { setFile(null); setPreview(''); }}><X size={14}/> Clear</button>
       </div>}
-      {preview && <img src={preview} alt="Selected upload" style={{maxWidth:'100%',maxHeight:360,objectFit:'contain',alignSelf:'center'}}/>}
+      {(preview || current?.url || current?.original?.original_image_url) && <img src={preview || current?.url || current?.original?.original_image_url} alt="Selected upload" style={{maxWidth:'100%',maxHeight:360,objectFit:'contain',alignSelf:'center'}}/>}
       {!current?.id && busyButton('process', 'Upload and process', UploadCloud, process)}
       {current?.id && <div className="row between"><span><b>{current.name}</b><br/><small>Image ID: {current.id}</small></span><button className="btn sm ghost" onClick={() => { setCurrent(null); setFile(null); setPreview(''); }}>New image</button></div>}
     </section>
