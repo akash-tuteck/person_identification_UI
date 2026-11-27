@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScanSearch, History, Boxes, Users, Video, GitCompare, Settings, Bell, Search, Menu, Sparkles, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, ScanSearch, History, Boxes, Users, Video, GitCompare, Settings, Menu, Sparkles, ChevronLeft } from 'lucide-react';
 
 const nav = [
   ['/', 'Dashboard', LayoutDashboard],
@@ -31,7 +31,6 @@ export default function Layout() {
       <header className="topbar">
         <button className="icon-btn show-mobile" onClick={()=>setOpen(true)} aria-label="Open menu"><Menu size={20}/></button>
         <h1>{title}</h1>
-        <label className="search"><Search size={16}/><input placeholder="Search is available in session history"/></label>
         <span className="badge completed">API UI</span>
       </header>
       <main className="content"><Outlet/></main>
