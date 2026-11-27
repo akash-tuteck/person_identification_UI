@@ -37,14 +37,14 @@ export default function VideoProcessing() {
     ['employees','Match registered employees',id=>videoApi.matchEmployees(id)],
   ];
   return <div className="stack">
-    <section className="card stack"><h3>Upload video</h3><p><small>Supported: MP4, AVI, MOV, MKV · Maximum 500 MB</small></p>
+    <section className="card stack"><h3>Upload video</h3><p><small>Supported: MP4, AVI, MOV, MKV · Maximum 500 MB</small></p>\n      <p><small>Recommended order: extract frames → detect people → extract OSNet features → track people. Object detection and employee matching can be run afterward.</small></p>
       <input className="input" type="file" accept="video/mp4,video/x-msvideo,video/quicktime,video/x-matroska,.mkv" onChange={e=>setFile(e.target.files[0]||null)}/>
       {file&&<p>{file.name} · {(file.size/1024/1024).toFixed(1)} MB</p>}
       <button className="btn" disabled={!file||!!busy} onClick={upload}>{busy==='upload'?'Uploading…':'Upload video'}</button>
     </section>
     {video?.video_id&&<section className="card stack"><h3>Video workflow</h3>
       <div className="kv"><span>Video ID</span><b>{video.video_id}</b></div>
-      <div className="kv"><span>Filename</span><b>{video.original_filename}</b></div>
+      <div className="kv"><span>Filename</span><b>{video.original_filename || video.filename}</b></div>
       <button className="btn sm ghost" disabled={!!busy} onClick={async()=>{try{const data=await videoApi.get(video.video_id);setVideo(data);notify('Video details refreshed');}catch(e){notify(e.message,'error');}}}>Refresh video details</button>
       <label className="field"><small>Frame interval (seconds)</small><input className="input" type="number" min="0.1" step="0.1" value={interval} onChange={e=>setInterval(e.target.value)}/></label>
       <div className="row gap wrap">{buttons.map(([key,label,fn])=><button key={key} className="btn" disabled={!!busy} onClick={()=>run(key,label,fn)}>{busy===key?'Running…':label}</button>)}</div>
