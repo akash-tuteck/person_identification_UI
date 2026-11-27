@@ -1,10 +1,23 @@
-import {Cpu,ShieldCheck} from 'lucide-react';import {useApp} from '../context/AppContext.jsx';
-const Sec=({t,children})=><section className="card"><h3>{t}</h3>{children}</section>;
-const Field=({l,children})=><label className="field"><small>{l}</small>{children}</label>;
-export default function Settings(){const {notify}=useApp();
- return(<div className="stack"><Sec t="User profile"><div className="grid2"><Field l="Full name"><input className="input" defaultValue="Alex Kumar"/></Field><Field l="Email"><input className="input" defaultValue="alex@documind.ai"/></Field></div></Sec>
- <Sec t="Application preferences"><div className="grid2"><Field l="Theme"><select className="input" defaultValue="Light"><option>Light</option><option disabled>Dark (coming soon)</option></select></Field><Field l="Language"><select className="input"><option>English</option></select></Field></div></Sec>
- <Sec t="Image storage"><div className="grid2"><Field l="Retention"><select className="input"><option>Keep 30 days</option><option>Keep 90 days</option><option>Keep forever</option></select></Field><Field l="Storage used"><progress value="42" max="100"/></Field></div></Sec>
- <Sec t="Default analysis options">{['People analysis','Object detection','Scene analysis','Text recognition'].map(o=><label key={o} className="check"><input type="checkbox" defaultChecked/> {o}</label>)}</Sec>
- <Sec t="AI model"><div className="row gap"><Cpu size={20}/><b>Local AI Engine – Ollama / Qwen3-VL</b></div><p className="ok"><ShieldCheck size={16}/> Processing runs locally. No images are sent to external AI APIs.</p></Sec>
- <button className="btn" onClick={()=>notify('Settings saved')}>Save changes</button></div>);}
+import { useEffect, useState } from 'react';
+import { healthApi } from '../services/api.js';
+
+export default function Settings() {
+  const [status, setStatus] = useState('Checking…');
+  const [error, setError] = useState('');
+  useEffect(() => {
+    healthApi.check().then(data => { setStatus(data.status || 'healthy'); setError(''); })
+      .catch(e => { setStatus('Unavailable'); setError(e.message); });
+  }, []);
+  return <div className="stack">
+    <section className="card stack"><h3>Backend connection</h3>
+      <div className="kv"><span>API status</span><b>{status}</b></div>
+      <div className="kv"><span>Backend URL</span><b>{import.meta.env.VITE_API_BASE_URL || 'Vite proxy → http://127.0.0.1:8000'}</b></div>
+      {error && <p className="toast error" style={{position:'static'}}>{error}</p>}
+      <button className="btn" onClick={() => { setStatus('Checking…'); healthApi.check().then(d => setStatus(d.status || 'healthy')).catch(e => { setStatus('Unavailable'); setError(e.message); }); }}>Check connection</button>
+    </section>
+    <section className="card stack"><h3>Connected backend capabilities</h3>
+      <p>Image processing, YOLO person detection, YOLO object detection, Gemma + Grounding DINO automatic object detection, OSNet person embeddings, DINOv2 object features, image comparison, employee registration and video processing.</p>
+      <small>Application settings and user profiles are not persisted by the current backend.</small>
+    </section>
+  </div>;
+}
