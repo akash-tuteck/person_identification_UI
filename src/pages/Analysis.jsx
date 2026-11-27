@@ -102,7 +102,7 @@ export default function Analysis() {
         </div>
         <div className="row gap">
           {busyButton('personFeatures', 'Extract OSNet features', Fingerprint, () => run('personFeatures', 'OSNet feature extraction', imageApi.extractPersonFeatures))}
-          {busyButton('objectFeatures', 'Extract DINOv2 object features', Fingerprint, () => run('objectFeatures', 'Object feature extraction', imageApi.extractObjectFeatures))}
+          {busyButton('objectFeatures', 'Extract DINOv2 + Gemma 4 features', Fingerprint, () => run('objectFeatures', 'DINOv2 + Gemma 4 feature extraction', imageApi.extractObjectFeatures))}
         </div>
         {error && <p className="toast error" style={{position:'static'}}>{error}</p>}
       </section>
@@ -119,6 +119,30 @@ export default function Analysis() {
         {(current.automatic?.detection?.annotated_image_url || current.objects?.annotated_image_url) && <div><b>Object detection</b><img src={current.automatic?.detection?.annotated_image_url || current.objects?.annotated_image_url} alt="Object detections" style={{display:'block',maxWidth:'100%',maxHeight:420,marginTop:8}}/></div>}
         {persons.map(person => <div className="row gap" key={person.person_number}><img src={person.crop_image_url} alt="Person crop" style={{width:80,height:100,objectFit:'cover'}}/><span>Person {person.person_number} · {Math.round(person.confidence * 100)}% confidence</span></div>)}
         {objects.map((object, i) => <div className="row gap" key={object.crop_filename || i}>{object.crop_image_url && <img src={object.crop_image_url} alt={object.category} style={{width:72,height:72,objectFit:'cover'}}/>}<span>{object.category} · {Math.round((object.confidence || 0) * 100)}% confidence</span></div>)}
+        {(current.objectFeatures?.processed_objects || current.detections?.objectFeatures?.processed_objects) && <section className="stack">
+          <h3>Object semantic features — Gemma 4</h3>
+          <p><small>Gemma 4 generates structured visual descriptions for each detected object crop. DINOv2 provides the 768-dimensional visual embedding.</small></p>
+          <div className="grid2">
+            <div><small>Objects processed</small><p><b>{(current.objectFeatures || current.detections.objectFeatures).total_objects_processed}</b></p></div>
+            <div><small>Gemma descriptions succeeded</small><p><b>{(current.objectFeatures || current.detections.objectFeatures).gemma_success_count}</b></p></div>
+            <div><small>Gemma descriptions failed</small><p><b>{(current.objectFeatures || current.detections.objectFeatures).gemma_failure_count}</b></p></div>
+            <div><small>DINOv2 embedding size</small><p><b>{(current.objectFeatures || current.detections.objectFeatures).embedding_dimension}-D</b></p></div>
+          </div>
+          {(current.objectFeatures || current.detections.objectFeatures).processed_objects.map((item, index) => <article className="card stack" key={item.object_filename || index}>
+            <div className="row between"><b>{item.category} — {item.object_filename}</b><span className="badge completed">{item.description_status || 'processed'}</span></div>
+            {item.gemma_features ? <>
+              <p>{item.gemma_features.description}</p>
+              <div className="grid2">
+                <div><small>Color</small><p>{item.gemma_features.color || 'Not determined'}</p></div>
+                <div><small>Shape</small><p>{item.gemma_features.shape || 'Not determined'}</p></div>
+                <div><small>Material / surface</small><p>{item.gemma_features.surface_or_material || 'Not determined'}</p></div>
+                <div><small>Condition</small><p>{item.gemma_features.condition || 'Not determined'}</p></div>
+              </div>
+              {item.gemma_features.visible_characteristics?.length > 0 && <div><small>Visible characteristics</small><ul>{item.gemma_features.visible_characteristics.map((feature, i) => <li key={i}>{feature}</li>)}</ul></div>}
+            </> : <p><small>{item.description_error || 'Gemma description unavailable for this object.'}</small></p>}
+            <small>DINOv2 embedding: {item.embedding_dimension}-D · {item.embedding_filename}</small>
+          </article>)}
+        </section>}
         {Object.entries(current.detections || {}).map(([key, value]) => <details key={key}><summary>{key} raw API response</summary><pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontSize:12}}>{JSON.stringify(value, null, 2)}</pre></details>)}
       </section>
     </>}
