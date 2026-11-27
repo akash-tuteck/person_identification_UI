@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { videoApi } from '../services/api.js';
 import { useApp } from '../context/AppContext.jsx';
 
-const actions = [
-  ['frames','Extract frames',api=>api.extractFrames],
-];
 export default function VideoProcessing() {
   const { notify } = useApp();
   const [file,setFile] = useState(null);
@@ -37,7 +34,8 @@ export default function VideoProcessing() {
     ['employees','Match registered employees',id=>videoApi.matchEmployees(id)],
   ];
   return <div className="stack">
-    <section className="card stack"><h3>Upload video</h3><p><small>Supported: MP4, AVI, MOV, MKV · Maximum 500 MB</small></p>\n      <p><small>Recommended order: extract frames → detect people → extract OSNet features → track people. Object detection and employee matching can be run afterward.</small></p>
+    <section className="card stack"><h3>Upload video</h3><p><small>Supported: MP4, AVI, MOV, MKV · Maximum 500 MB</small></p>
+      <p><small>Recommended order: extract frames → detect people → extract OSNet features → track people. Object detection and employee matching can be run afterward.</small></p>
       <input className="input" type="file" accept="video/mp4,video/x-msvideo,video/quicktime,video/x-matroska,.mkv" onChange={e=>setFile(e.target.files[0]||null)}/>
       {file&&<p>{file.name} · {(file.size/1024/1024).toFixed(1)} MB</p>}
       <button className="btn" disabled={!file||!!busy} onClick={upload}>{busy==='upload'?'Uploading…':'Upload video'}</button>
