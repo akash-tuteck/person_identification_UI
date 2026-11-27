@@ -10,6 +10,8 @@ export default function Employees() {
   const [files, setFiles] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [lookupId, setLookupId] = useState('');
+  const [details, setDetails] = useState(null);
   const load = () => employeeApi.list().then(data => setRows(data.employees || [])).catch(e => setError(e.message));
   useEffect(() => { load(); }, []);
   const submit = async event => {
@@ -31,6 +33,10 @@ export default function Employees() {
         <button className="btn" disabled={busy}>{busy ? 'Registering…' : 'Register employee'}</button>
       </form>
       {error && <p className="toast error" style={{position:'static'}}>{error}</p>}
+    </section>
+    <section className="card stack"><h3>Employee details lookup</h3>
+      <div className="row gap"><input className="input" value={lookupId} onChange={e=>setLookupId(e.target.value)} placeholder="Employee ID"/><button className="btn" onClick={async()=>{try{setDetails(await employeeApi.get(lookupId.trim()));}catch(e){notify(e.message,'error');}}} disabled={!lookupId.trim()}>Load details</button></div>
+      {details && <pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{JSON.stringify(details,null,2)}</pre>}
     </section>
     <section className="card stack"><div className="row between"><h3>Registered employees</h3><button className="btn sm ghost" onClick={load}>Refresh</button></div>
       {!rows.length ? <p>No employees registered yet.</p> : <div className="table-wrap"><table><thead><tr><th>Employee ID</th><th>Name</th><th>Reference photos</th><th>Embedding dimension</th></tr></thead>
