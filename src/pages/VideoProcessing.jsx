@@ -45,6 +45,7 @@ export default function VideoProcessing() {
     {video?.video_id&&<section className="card stack"><h3>Video workflow</h3>
       <div className="kv"><span>Video ID</span><b>{video.video_id}</b></div>
       <div className="kv"><span>Filename</span><b>{video.original_filename}</b></div>
+      <button className="btn sm ghost" disabled={!!busy} onClick={async()=>{try{const data=await videoApi.get(video.video_id);setVideo(data);notify('Video details refreshed');}catch(e){notify(e.message,'error');}}}>Refresh video details</button>
       <label className="field"><small>Frame interval (seconds)</small><input className="input" type="number" min="0.1" step="0.1" value={interval} onChange={e=>setInterval(e.target.value)}/></label>
       <div className="row gap wrap">{buttons.map(([key,label,fn])=><button key={key} className="btn" disabled={!!busy} onClick={()=>run(key,label,fn)}>{busy===key?'Running…':label}</button>)}</div>
       <label className="field"><small>Reference image ID for video matching</small><input className="input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="Processed reference image UUID"/></label>
