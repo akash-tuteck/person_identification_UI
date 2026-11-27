@@ -1,11 +1,41 @@
-import {useState} from 'react';import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer} from 'recharts';
-import {useApp} from '../context/AppContext.jsx';import BoundingBoxOverlay from '../components/BoundingBoxOverlay.jsx';import {Empty} from '../components/ui.jsx';
-export default function Detection(){const {current}=useApp();const [f,setF]=useState('All');const a=current?.analysis;
- if(!a)return <Empty title="No analysed image" text="Analyse an image first to explore its detected objects." to="/analysis" cta="Go to Image Analysis"/>;
- const cats=[...new Set(a.objects.map(o=>o.category))];const data=cats.map(c=>({category:c,count:a.objects.filter(o=>o.category===c).reduce((n,o)=>n+o.count,0)}));
- const list=a.objects.filter(o=>f==='All'||o.category===f);
- return(<div className="split"><section className="card pane"><BoundingBoxOverlay src={current.url} objects={a.objects} filter={f}/>
-  <div className="chips">{['All',...cats].map(c=><button key={c} className={`chip ${f===c?'on':''}`} onClick={()=>setF(c)}>{c}</button>)}</div></section>
- <section className="card pane"><h3>{a.objects.reduce((n,o)=>n+o.count,0)} objects in {cats.length} categories</h3>
-  <div style={{height:200}}><ResponsiveContainer><BarChart data={data}><XAxis dataKey="category" fontSize={12}/><YAxis allowDecimals={false} fontSize={12}/><Tooltip/><Bar dataKey="count" fill="#6d5dfc" radius={[6,6,0,0]}/></BarChart></ResponsiveContainer></div>
-  {list.map((o,i)=><div key={i} className="kv"><span><b>{o.name}</b> <small>{o.category}</small></span><span>{Math.round(o.confidence*100)}%</span></div>)}</section></div>);}
+import { useApp } from '../context/AppContext.jsx';
+import { Empty } from '../components/ui.jsx';
+
+export default function Detection() {
+  const { current } = useApp();
+  if (!current?.id) return <Empty title="No processed image" text="Upload and process an image first." to="/analysis" cta="Open image processing"/>;
+
+  const personResult = current.persons;
+  const objectResult = current.automatic?.detection || current.automatic || current.objects;
+  const people = personResult?.persons || [];
+  const objects = objectResult?.objects || [];
+
+  return <div className="stack">
+    <section className="card stack">
+      <h3>Detection results</h3>
+      <p><small>{current.name} · {current.id}</small></p>
+      <div className="grid2">
+        <div><small>People detected</small><h2>{personResult?.total_persons ?? people.length}</h2></div>
+        <div><small>Objects detected</small><h2>{objectResult?.total_objects ?? objects.length}</h2></div>
+      </div>
+    </section>
+    {personResult ? <section className="card stack">
+      <h3>Person detections</h3>
+      {personResult.annotated_image_url && <img src={personResult.annotated_image_url} alt="Person detections" style={{maxWidth:'100%',maxHeight:480,objectFit:'contain'}}/>}
+      <div className="grid">{people.map(person => <div className="card" key={person.person_number}>
+        <img src={person.crop_image_url} alt={`Person ${person.person_number}`} style={{width:'100%',maxHeight:180,objectFit:'contain'}}/>
+        <b>Person {person.person_number}</b><small>{Math.round(person.confidence * 100)}% confidence</small>
+        <small>{JSON.stringify(person.bounding_box)}</small>
+      </div>)}</div>
+    </section> : <section className="card"><p>Run Detect people from Image Analysis to see person crops.</p></section>}
+    {objectResult ? <section className="card stack">
+      <h3>Object detections</h3>
+      {objectResult.annotated_image_url && <img src={objectResult.annotated_image_url} alt="Object detections" style={{maxWidth:'100%',maxHeight:480,objectFit:'contain'}}/>}
+      <div className="table-wrap"><table><thead><tr><th>Category</th><th>Confidence</th><th>Bounding box</th><th>Crop</th></tr></thead>
+        <tbody>{objects.map((object, index) => <tr key={object.crop_filename || index}>
+          <td>{object.category}</td><td>{Math.round((object.confidence || 0) * 100)}%</td><td>{JSON.stringify(object.bounding_box)}</td>
+          <td>{object.crop_image_url ? <a href={object.crop_image_url} target="_blank" rel="noreferrer">View crop</a> : '—'}</td>
+        </tr>)}</tbody></table></div>
+    </section> : <section className="card"><p>Run Detect objects or Automatic Gemma + Grounding DINO from Image Analysis to see object results.</p></section>}
+  </div>;
+}
