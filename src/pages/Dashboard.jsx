@@ -1,14 +1,25 @@
-import {useNavigate} from 'react-router-dom';import {Images,Users,Boxes,CheckCircle2} from 'lucide-react';
-import {useApp} from '../context/AppContext.jsx';import {StatCard,ImageCard,Skeleton,fmtDate} from '../components/ui.jsx';
-export default function Dashboard(){const {images,loading}=useApp(),nav=useNavigate();
- const sum=k=>images.reduce((n,i)=>n+i[k],0);
- return(<>
- <section className="card hero"><div><h2>Welcome to DocuMind AI</h2><p>Turn your images into meaningful insights with artificial intelligence.</p></div>
-  <button className="btn lg" onClick={()=>nav('/analysis')}>Analyze New Image</button></section>
- <div className="grid stats"><StatCard icon={Images} label="Total Images Analyzed" value={images.length} tone="p"/><StatCard icon={Users} label="People Detected" value={sum('people')} tone="b"/>
-  <StatCard icon={Boxes} label="Objects Detected" value={sum('objects')} tone="p"/><StatCard icon={CheckCircle2} label="Analyses Completed" value={images.filter(i=>i.status==='Completed').length} tone="b"/></div>
- <h3 className="section">Recent image analyses</h3>
- {loading?<Skeleton/>:<div className="grid">{images.slice(0,4).map(i=><ImageCard key={i.id} img={i} onView={()=>nav('/history')}/>)}</div>}
- <h3 className="section">Recent activity</h3>
- <div className="card"><ul className="activity">{images.slice(0,5).map(i=><li key={i.id}><i className={`dot-s ${i.status.toLowerCase()}`}/><span><b>{i.name}</b> {i.status==='Completed'?'was analysed':i.status==='Failed'?'failed to process':'is processing'}</span><small>{fmtDate(i.uploadedAt)}</small></li>)}</ul></div>
- </>);}
+import { useNavigate } from 'react-router-dom';
+import { Images, Users, Boxes, CheckCircle2 } from 'lucide-react';
+import { useApp } from '../context/AppContext.jsx';
+import { StatCard, ImageCard } from '../components/ui.jsx';
+
+export default function Dashboard() {
+  const { images, setCurrent } = useApp();
+  const nav = useNavigate();
+  const people = images.reduce((sum, image) => sum + (image.persons?.total_persons || 0), 0);
+  const objects = images.reduce((sum, image) => sum + (image.automatic?.detection?.total_objects || image.objects?.total_objects || 0), 0);
+  return <>
+    <section className="card hero"><div><h2>Person Re-Identification</h2><p>Upload images and videos, detect people and objects, extract features and compare matches.</p></div>
+      <button className="btn lg" onClick={() => nav('/analysis')}>Process an image</button>
+    </section>
+    <div className="grid stats">
+      <StatCard icon={Images} label="Images processed this session" value={images.length} tone="p"/>
+      <StatCard icon={Users} label="People detected" value={people} tone="b"/>
+      <StatCard icon={Boxes} label="Objects detected" value={objects} tone="p"/>
+      <StatCard icon={CheckCircle2} label="API workflows" value="Connected" tone="b"/>
+    </div>
+    <h3 className="section">Recent images (this session)</h3>
+    {!images.length ? <div className="card empty"><h3>No images processed yet</h3><p>Upload an image to start using the backend.</p><button className="btn" onClick={() => nav('/analysis')}>Upload image</button></div> :
+      <div className="grid">{images.slice(0, 6).map(image => <ImageCard key={image.id} img={{...image,people:image.persons?.total_persons||0,objects:image.automatic?.detection?.total_objects||image.objects?.total_objects||0,status:'Processed'}} onView={() => { setCurrent(image); nav('/analysis'); }}/>)}</div>}
+  </>;
+}
